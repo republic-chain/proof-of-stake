@@ -1,0 +1,47 @@
+[package]
+name = "production-pos"
+version = "0.1.0"
+edition = "2021"
+authors = ["Republic Chain Team"]
+description = "Production-grade Proof of Stake blockchain implementation"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+
+[dependencies]
+# Essential dependencies only
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+hex = "0.4"
+anyhow = "1.0"
+thiserror = "1.0"
+rand = "0.8"
+
+# Cryptography - using std library equivalents where possible
+sha2 = "0.10"
+ed25519-dalek = { version = "2.0", features = ["rand_core"] }
+
+# Async runtime
+tokio = { version = "1.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time", "signal"] }
+
+# CLI
+clap = { version = "4.0", features = ["derive"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[[bin]]
+name = "node"
+path = "src/bin/node.rs"
+
+[[bin]]
+name = "validator"
+path = "src/bin/validator.rs"
+
+[[example]]
+name = "basic_usage"
+path = "examples/basic_usage.rs"
