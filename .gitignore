@@ -1,0 +1,66 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Data directories
+data/
+db/
+*.db
+*.sqlite
+*.sqlite3
+
+# Config files with secrets
+config.local.toml
+*.key
+*.pem
+secrets/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Coverage reports
+tarpaulin-report.html
+coverage/
+
+# Benchmark results
+criterion/
+
+# Documentation build
+book/
+
+# Local development
+.env
+.env.local
+.env.*.local
+
+# Node modules (if using any JS tools)
+node_modules/
+
+# Python (if using any Python scripts)
+__pycache__/
+*.py[cod]
+*$py.class
