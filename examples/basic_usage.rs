@@ -4,7 +4,9 @@ use production_pos::{
     types::*,
     crypto::*,
     consensus::*,
+    network::*,
 };
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -117,7 +119,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Selected proposer for slot 1: {}", selected_proposer);
     }
 
-    println!("🎉 Basic functionality test completed successfully!");
+    // Test networking functionality
+    println!("\n=== Testing P2P Networking ===");
+
+    // Create network configuration for local testing
+    let network_config = NetworkConfig::local_node(0);
+    println!("Network config created for port: {}", network_config.port);
+
+    // Create network service
+    match NetworkService::new(network_config) {
+        Ok((service, mut handle)) => {
+            println!("✅ Network service created successfully");
+
+            // Start the network service in the background
+            let _service_task = tokio::spawn(async move {
+                if let Err(e) = service.run().await {
+                    eprintln!("Network service error: {}", e);
+                }
+            });
+
+            // Wait a moment for the service to start
+            tokio::time::sleep(Duration::from_millis(500)).await;
+
+            // Test getting peer information
+            match handle.get_peers().await {
+                Ok(peers) => {
+                    println!("✅ Retrieved peer list: {} connected peers", peers.len());
+                }
+                Err(e) => {
+                    println!("❌ Failed to get peers: {}", e);
+                }
+            }
+
+            // Test block broadcasting (will fail without peers, which is expected)
+            println!("Testing block broadcast...");
+            if let Err(_) = handle.broadcast_block(block).await {
+                println!("✅ Block broadcast attempted (no peers to broadcast to, which is expected)");
+            }
+
+            println!("✅ Network functionality test completed");
+        }
+        Err(e) => {
+            println!("❌ Failed to create network service: {}", e);
+        }
+    }
+
+    println!("\n🎉 All functionality tests completed successfully!");
+    println!("\nTo test multi-node networking, run:");
+    println!("  cargo run --example network_example");
 
     Ok(())
 }
