@@ -4,12 +4,12 @@ use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub struct ProposerSelector {
-    config: ConsensusConfig,
+    _config: ConsensusConfig,
 }
 
 impl ProposerSelector {
     pub fn new(config: ConsensusConfig) -> Self {
-        ProposerSelector { config }
+        ProposerSelector { _config: config }
     }
 
     pub fn select_proposer(&self, slot: Slot, validator_set: &ValidatorSet) -> Result<Address> {

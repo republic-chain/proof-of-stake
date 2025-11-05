@@ -208,23 +208,11 @@ impl SparseMerkleTree {
     pub fn get_proof(&self, index: u64) -> Vec<Hash> {
         let mut proof = Vec::new();
         let mut current_index = index;
-        let mut current_size = 1u64 << self.depth;
-        let mut current_start = 0;
 
-        for level in 0..self.depth {
-            let mid = current_start + current_size / 2;
-            let sibling_start = if current_index < mid {
-                mid
-            } else {
-                current_start
-            };
-
-            proof.push(self.get_node(level + 1, sibling_start));
-
-            if current_index >= mid {
-                current_start = mid;
-            }
-            current_size /= 2;
+        for level in (1..=self.depth).rev() {
+            let sibling_index = current_index ^ 1;
+            proof.push(self.get_node(level, sibling_index));
+            current_index /= 2;
         }
 
         proof

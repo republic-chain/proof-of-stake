@@ -2,23 +2,30 @@ use production_pos::{
     types::*,
     crypto::*,
     consensus::*,
-    config::*,
 };
 // use tempfile::TempDir; // Not needed for basic tests
 
 #[tokio::test]
 async fn test_basic_block_creation_and_validation() {
     let config = ConsensusConfig::default();
-    let genesis_validators = create_test_validators(3);
+    let (genesis_validators, keypairs) = create_test_validators_with_keys(3);
 
     let mut consensus = ConsensusEngine::new(config, genesis_validators).unwrap();
 
     // Create a test block
     let proposer = consensus.validator_set.get_active_validators()[0].address;
-    let block = create_test_block(1, [0u8; 32], proposer);
+    let mut block = create_test_block(1, [0u8; 32], proposer);
+
+    // Sign the block with the proposer's key
+    let proposer_keypair = keypairs.iter().find(|kp| kp.address == proposer).unwrap();
+    block.sign(&proposer_keypair.signing_key());
 
     // Process the block
-    assert!(consensus.process_block(&block).is_ok());
+    let result = consensus.process_block(&block);
+    if let Err(e) = &result {
+        println!("Block processing error: {:?}", e);
+    }
+    assert!(result.is_ok());
 }
 
 #[tokio::test]
@@ -168,7 +175,7 @@ fn create_test_validators(count: usize) -> Vec<Validator> {
         let validator = Validator::new(
             keypair.address,
             keypair.public_key,
-            10000, // stake
+            1_000_000_000, // stake - meet minimum deposit requirement
             500,   // commission rate (5%)
             0,     // registration epoch
             metadata,
@@ -178,6 +185,35 @@ fn create_test_validators(count: usize) -> Vec<Validator> {
     }
 
     validators
+}
+
+fn create_test_validators_with_keys(count: usize) -> (Vec<Validator>, Vec<KeyPair>) {
+    let mut validators = Vec::new();
+    let mut keypairs = Vec::new();
+
+    for i in 0..count {
+        let keypair = KeyPair::generate();
+        let metadata = ValidatorMetadata {
+            name: format!("validator_{}", i),
+            website: None,
+            description: None,
+            contact: None,
+        };
+
+        let validator = Validator::new(
+            keypair.address,
+            keypair.public_key,
+            1_000_000_000, // stake - meet minimum deposit requirement
+            500,   // commission rate (5%)
+            0,     // registration epoch
+            metadata,
+        );
+
+        validators.push(validator);
+        keypairs.push(keypair);
+    }
+
+    (validators, keypairs)
 }
 
 fn create_test_block(height: u64, previous_hash: Hash, proposer: Address) -> Block {

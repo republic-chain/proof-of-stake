@@ -52,7 +52,7 @@ impl ValidatorService {
     }
 
     pub fn create_attestation(&self, slot: Slot, beacon_block_root: Hash) -> Result<Attestation, Box<dyn std::error::Error>> {
-        let keypair = self.keypair.as_ref().ok_or("No keypair available")?;
+        let _keypair = self.keypair.as_ref().ok_or("No keypair available")?;
 
         let attestation = Attestation {
             slot,
