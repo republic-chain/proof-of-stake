@@ -34,15 +34,21 @@ production-pos/
 │   ├── types/           # Core data structures
 │   ├── crypto/          # Cryptographic utilities
 │   ├── consensus/       # Consensus implementation
-│   ├── network/         # P2P networking (TODO)
+│   ├── network/         # P2P networking (libp2p-based)
+│   │   ├── mod.rs       # Main networking service
+│   │   ├── config.rs    # Network configuration
+│   │   ├── events.rs    # Network events
+│   │   ├── messages.rs  # Message types
+│   │   └── peer.rs      # Peer management
 │   ├── storage/         # Database and persistence (TODO)
-│   ├── validator/       # Validator operations (TODO)
+│   ├── validator/       # Validator operations
 │   ├── config/          # Configuration management
 │   ├── bin/             # Binary executables
 │   └── lib.rs           # Main library
 ├── tests/               # Integration tests
 ├── docs/                # Documentation
 ├── examples/            # Example code
+│   └── network_example.rs # P2P networking example
 └── Cargo.toml          # Project configuration
 ```
 
@@ -60,6 +66,17 @@ cargo watch -x test
 
 # Run with debug logging
 RUST_LOG=debug cargo run --bin node
+
+# Test networking with multiple nodes
+cargo run --example network_example
+
+# Run local multi-node setup
+# Terminal 1:
+RUST_LOG=info cargo run --bin node -- --port 9000 --node-id 0
+# Terminal 2:
+RUST_LOG=info cargo run --bin node -- --port 9001 --node-id 1
+# Terminal 3:
+RUST_LOG=info cargo run --bin node -- --port 9002 --node-id 2
 ```
 
 **Code formatting and linting:**
@@ -89,11 +106,17 @@ cargo test --lib
 # Integration tests
 cargo test --test integration_tests
 
+# Run network tests specifically
+cargo test test_network
+
 # Documentation tests
 cargo test --doc
 
 # Run with output
 cargo test -- --nocapture
+
+# Test networking functionality
+cargo run --example network_example
 ```
 
 **Test coverage:**
@@ -210,6 +233,199 @@ pub trait Storage: Send + Sync {
 pub trait NetworkService: Send + Sync {
     async fn broadcast_block(&self, block: Block) -> Result<()>;
     async fn request_blocks(&self, from: u64, to: u64) -> Result<Vec<Block>>;
+}
+```
+
+## Networking Development
+
+### P2P Network Architecture
+
+The networking module is built on libp2p and provides:
+- **Transport Layer**: TCP with Noise encryption and Yamux multiplexing
+- **Discovery**: mDNS for local networks, Kademlia DHT for routing
+- **Messaging**: GossipSub for efficient message propagation
+- **Peer Management**: Reputation system and connection health monitoring
+
+### Network Development Patterns
+
+**Creating a Network Service:**
+```rust
+use production_pos::network::{NetworkConfig, NetworkService};
+
+// Create configuration for local testing
+let config = NetworkConfig::local_node(0); // Node 0 on port 9000
+
+// Create network service and handle
+let (service, mut handle) = NetworkService::new(config)?;
+
+// Start the service
+let service_task = tokio::spawn(async move {
+    service.run().await
+});
+
+// Use handle for network operations
+let peers = handle.get_peers().await?;
+handle.broadcast_block(block).await?;
+```
+
+**Handling Network Events:**
+```rust
+while let Some(event) = handle.next_event().await {
+    match event {
+        NetworkEvent::BlockReceived { block, from } => {
+            info!("Received block {} from {}", block.header.height, from);
+            // Process the block through consensus
+            consensus.process_block(block).await?;
+        }
+        NetworkEvent::TransactionReceived { transaction, from } => {
+            info!("Received transaction from {}", from);
+            // Add to mempool
+            mempool.add_transaction(transaction).await?;
+        }
+        NetworkEvent::PeerConnected { peer_id } => {
+            info!("New peer connected: {}", peer_id);
+        }
+        _ => {}
+    }
+}
+```
+
+**Local Multi-Node Testing:**
+```rust
+// Create multiple nodes for testing
+async fn create_test_network(node_count: usize) -> Result<Vec<NetworkHandle>> {
+    let mut handles = Vec::new();
+
+    for i in 0..node_count {
+        let config = NetworkConfig::local_node(i as u8);
+        let (service, handle) = NetworkService::new(config)?;
+
+        tokio::spawn(async move {
+            service.run().await
+        });
+
+        handles.push(handle);
+
+        // Wait between node starts for proper discovery
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+
+    // Wait for nodes to discover each other
+    tokio::time::sleep(Duration::from_secs(2)).await;
+
+    Ok(handles)
+}
+```
+
+### Network Testing Guidelines
+
+**Unit Testing Network Components:**
+```rust
+#[tokio::test]
+async fn test_network_config() {
+    let config = NetworkConfig::local_node(0);
+    assert_eq!(config.port, 9000);
+    assert!(config.local_network.enabled);
+}
+
+#[tokio::test]
+async fn test_peer_reputation() {
+    let mut peer = PeerInfo::new(peer_id, PeerStatus::Connected);
+
+    // Test reputation increases
+    peer.increase_reputation(10);
+    assert_eq!(peer.reputation, 60);
+
+    // Test reputation decreases
+    peer.decrease_reputation(20);
+    assert_eq!(peer.reputation, 40);
+}
+```
+
+**Integration Testing:**
+```rust
+#[tokio::test]
+async fn test_network_message_propagation() {
+    // Create test network with 3 nodes
+    let handles = create_test_network(3).await?;
+
+    // Broadcast from first node
+    let test_block = create_test_block();
+    handles[0].broadcast_block(test_block.clone()).await?;
+
+    // Verify other nodes receive it
+    let mut received_count = 0;
+    let timeout = Duration::from_secs(5);
+
+    for handle in &handles[1..] {
+        if let Ok(Some(event)) = timeout(timeout, handle.next_event()).await {
+            if matches!(event, NetworkEvent::BlockReceived { .. }) {
+                received_count += 1;
+            }
+        }
+    }
+
+    assert_eq!(received_count, 2);
+}
+```
+
+### Network Debugging
+
+**Enable Network Logging:**
+```bash
+# Debug all network activity
+RUST_LOG=production_pos::network=debug cargo run --bin node
+
+# Trace libp2p internals
+RUST_LOG=libp2p=trace cargo run --bin node
+
+# Focus on specific components
+RUST_LOG=production_pos::network::peer=info,libp2p_gossipsub=debug cargo run --bin node
+```
+
+**Network Monitoring:**
+```rust
+// Monitor peer connections
+let peers = handle.get_peers().await?;
+for peer in peers {
+    println!("Peer: {} - Status: {:?} - RTT: {:?} - Reputation: {}",
+        peer.peer_id, peer.status, peer.avg_rtt, peer.reputation);
+}
+
+// Monitor network events
+while let Some(event) = handle.next_event().await {
+    println!("Network event: {}", event.description());
+}
+```
+
+### Network Performance Optimization
+
+**Connection Management:**
+```rust
+// Configure for local development
+let mut config = NetworkConfig::local_node(0);
+config.max_connections = 10;  // Lower for local testing
+config.connection_timeout = Duration::from_secs(5);
+
+// Configure for production
+config.max_connections = 100;
+config.connection_timeout = Duration::from_secs(30);
+```
+
+**Message Batching:**
+```rust
+// Batch messages for efficiency
+let mut message_queue = Vec::new();
+
+for transaction in transactions {
+    message_queue.push(transaction);
+
+    if message_queue.len() >= 10 {
+        // Broadcast batch
+        for tx in message_queue.drain(..) {
+            handle.broadcast_transaction(tx).await?;
+        }
+    }
 }
 ```
 

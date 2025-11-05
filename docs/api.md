@@ -374,7 +374,7 @@ GET /network/status
 
 ### Get Peer Information
 
-Returns information about connected peers.
+Returns detailed information about connected peers.
 
 ```http
 GET /network/peers
@@ -388,15 +388,164 @@ GET /network/peers
     "peers": [
       {
         "id": "12D3KooWABC123...",
-        "address": "/ip4/192.168.1.100/tcp/9000",
+        "addresses": [
+          "/ip4/192.168.1.100/tcp/9000",
+          "/ip4/10.0.0.100/tcp/9000"
+        ],
+        "status": "Connected",
         "direction": "outbound",
         "connected_at": "2024-01-01T10:30:00Z",
-        "last_seen": "2024-01-01T12:00:00Z"
+        "last_seen": "2024-01-01T12:00:00Z",
+        "connection_count": 5,
+        "failed_connections": 0,
+        "avg_rtt": 25,
+        "latest_rtt": 23,
+        "reputation": 85,
+        "protocol_version": "/republic-chain/1.0.0",
+        "agent_version": "production-pos/0.1.0"
       }
     ],
     "total_peers": 45,
-    "max_peers": 50
+    "max_peers": 50,
+    "network_info": {
+      "local_peer_id": "12D3KooWXYZ789...",
+      "protocols": [
+        "/republic-chain/gossipsub/1.1.0",
+        "/republic-chain/identify/1.0.0",
+        "/ipfs/kad/1.0.0",
+        "/ipfs/ping/1.0.0"
+      ],
+      "listen_addresses": [
+        "/ip4/0.0.0.0/tcp/9000",
+        "/ip4/127.0.0.1/tcp/9000"
+      ]
+    }
   }
+}
+```
+
+### Connect to Peer
+
+Manually connect to a specific peer.
+
+```http
+POST /network/peers/connect
+```
+
+**Request Body:**
+```json
+{
+  "address": "/ip4/192.168.1.100/tcp/9000"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "peer_id": "12D3KooWABC123...",
+    "status": "connecting"
+  }
+}
+```
+
+### Disconnect from Peer
+
+Disconnect from a specific peer.
+
+```http
+POST /network/peers/{peer_id}/disconnect
+```
+
+**Parameters:**
+- `peer_id` (string): Peer ID to disconnect from
+
+### Get Network Configuration
+
+Returns current network configuration.
+
+```http
+GET /network/config
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "port": 9000,
+    "max_connections": 50,
+    "enable_mdns": true,
+    "bootstrap_peers": [
+      "/ip4/192.168.1.100/tcp/9000",
+      "/ip4/192.168.1.101/tcp/9000"
+    ],
+    "local_network": {
+      "enabled": true,
+      "base_port": 9000,
+      "max_local_nodes": 10,
+      "bind_address": "127.0.0.1"
+    },
+    "topics": [
+      "blocks",
+      "transactions",
+      "consensus"
+    ]
+  }
+}
+```
+
+### Get Network Statistics
+
+Returns detailed network statistics and metrics.
+
+```http
+GET /network/stats
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "uptime": 3600,
+    "total_connections": 128,
+    "current_connections": 45,
+    "failed_connections": 12,
+    "messages_sent": 15420,
+    "messages_received": 18650,
+    "bytes_sent": 2450000,
+    "bytes_received": 3120000,
+    "gossipsub_stats": {
+      "topics_subscribed": 3,
+      "messages_published": 245,
+      "messages_received": 1890,
+      "peers_in_mesh": 8
+    },
+    "discovery_stats": {
+      "mdns_discoveries": 5,
+      "dht_queries": 23,
+      "bootstrap_attempts": 3
+    }
+  }
+}
+```
+
+### Broadcast Message
+
+Manually broadcast a message to the network (for testing).
+
+```http
+POST /network/broadcast
+```
+
+**Request Body:**
+```json
+{
+  "topic": "test-topic",
+  "data": "SGVsbG8gV29ybGQ=",
+  "message_type": "ping"
 }
 ```
 
