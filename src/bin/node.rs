@@ -49,6 +49,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .value_parser(["trace", "debug", "info", "warn", "error"])
                 .default_value("info"),
         )
+        .arg(
+            Arg::new("port")
+                .short('p')
+                .long("port")
+                .value_name("PORT")
+                .help("Network port to listen on")
+                .value_parser(clap::value_parser!(u16))
+                .default_value("9000"),
+        )
+        .arg(
+            Arg::new("node-id")
+                .long("node-id")
+                .value_name("ID")
+                .help("Local node ID for testing (0-9)")
+                .value_parser(clap::value_parser!(u8)),
+        )
         .get_matches();
 
     // Initialize logging
@@ -85,6 +101,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if matches.get_flag("validator") {
         config.validator.enabled = true;
+    }
+
+    // Handle networking arguments
+    if let Some(port) = matches.get_one::<u16>("port") {
+        config.network.port = *port;
+    }
+
+    // If node-id is specified, configure for local testing
+    if let Some(node_id) = matches.get_one::<u8>("node-id") {
+        config.network.listen_address = "127.0.0.1".to_string();
+        config.network.enable_mdns = true;
+
+        // Add bootstrap nodes for a typical 3-node setup
+        // Assume nodes are on consecutive ports starting from a base
+        let node_port = config.network.port;
+        let base_port = if node_port >= *node_id as u16 {
+            node_port - (*node_id as u16)
+        } else {
+            9000 // fallback to default base
+        };
+
+        config.network.bootstrap_nodes.clear();
+        for i in 0..3u8 {
+            if i != *node_id {
+                let bootstrap_port = base_port + (i as u16);
+                config.network.bootstrap_nodes.push(
+                    format!("/ip4/127.0.0.1/tcp/{}", bootstrap_port)
+                );
+            }
+        }
     }
 
     info!("Configuration: {:?}", config);

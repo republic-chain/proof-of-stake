@@ -16,6 +16,7 @@ pub struct NodeConfig {
 pub struct NetworkConfig {
     pub network_id: NetworkId,
     pub listen_address: String,
+    pub port: u16,
     pub max_peers: usize,
     pub bootstrap_nodes: Vec<String>,
     pub enable_mdns: bool,
@@ -91,7 +92,8 @@ impl Default for NetworkConfig {
     fn default() -> Self {
         NetworkConfig {
             network_id: NetworkId::Devnet,
-            listen_address: "/ip4/0.0.0.0/tcp/9000".to_string(),
+            listen_address: "0.0.0.0".to_string(),
+            port: 9000,
             max_peers: 50,
             bootstrap_nodes: Vec::new(),
             enable_mdns: true,

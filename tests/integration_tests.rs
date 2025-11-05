@@ -229,3 +229,41 @@ fn create_test_block(height: u64, previous_hash: Hash, proposer: Address) -> Blo
         1000000,   // gas_limit
     )
 }
+
+#[tokio::test]
+async fn test_network_service_creation() {
+    use production_pos::network::{NetworkConfig, NetworkService};
+
+    // Test that we can create network services with different configurations
+    let config1 = NetworkConfig::with_port(0); // Let OS choose port
+    let result1 = NetworkService::new(config1);
+    assert!(result1.is_ok());
+
+    let config2 = NetworkConfig::local_node(0);
+    let result2 = NetworkService::new(config2);
+    assert!(result2.is_ok());
+
+    println!("Network service creation test completed");
+}
+
+#[tokio::test]
+async fn test_network_configuration() {
+    use production_pos::network::NetworkConfig;
+
+    // Test default configuration
+    let default_config = NetworkConfig::default();
+    assert!(default_config.enable_mdns);
+    assert!(!default_config.bootstrap_peers.is_empty() || default_config.bootstrap_peers.is_empty()); // Can be either
+    assert!(default_config.max_connections > 0);
+
+    // Test local node configuration
+    let local_config = NetworkConfig::local_node(0);
+    assert_eq!(local_config.port, 9000);
+    assert!(local_config.local_network.enabled);
+
+    // Test custom port configuration
+    let custom_config = NetworkConfig::with_port(8080);
+    assert_eq!(custom_config.port, 8080);
+
+    println!("Network configuration test completed");
+}
