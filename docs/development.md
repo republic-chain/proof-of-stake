@@ -250,7 +250,7 @@ The networking module is built on libp2p and provides:
 
 **Creating a Network Service:**
 ```rust
-use production_pos::network::{NetworkConfig, NetworkService};
+use proof_of_stake::network::{NetworkConfig, NetworkService};
 
 // Create configuration for local testing
 let config = NetworkConfig::local_node(0); // Node 0 on port 9000
@@ -374,13 +374,13 @@ async fn test_network_message_propagation() {
 **Enable Network Logging:**
 ```bash
 # Debug all network activity
-RUST_LOG=production_pos::network=debug cargo run --bin node
+RUST_LOG=proof_of_stake::network=debug cargo run --bin node
 
 # Trace libp2p internals
 RUST_LOG=libp2p=trace cargo run --bin node
 
 # Focus on specific components
-RUST_LOG=production_pos::network::peer=info,libp2p_gossipsub=debug cargo run --bin node
+RUST_LOG=proof_of_stake::network::peer=info,libp2p_gossipsub=debug cargo run --bin node
 ```
 
 **Network Monitoring:**

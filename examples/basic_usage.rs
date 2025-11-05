@@ -1,6 +1,6 @@
 // Basic usage example for Production PoS
 
-use production_pos::{
+use proof_of_stake::{
     types::*,
     crypto::*,
     consensus::*,

@@ -1,4 +1,4 @@
-use production_pos::{
+use proof_of_stake::{
     types::*,
     crypto::*,
     consensus::*,
@@ -232,7 +232,7 @@ fn create_test_block(height: u64, previous_hash: Hash, proposer: Address) -> Blo
 
 #[tokio::test]
 async fn test_network_service_creation() {
-    use production_pos::network::{NetworkConfig, NetworkService};
+    use proof_of_stake::network::{NetworkConfig, NetworkService};
 
     // Test that we can create network services with different configurations
     let config1 = NetworkConfig::with_port(0); // Let OS choose port
@@ -248,7 +248,7 @@ async fn test_network_service_creation() {
 
 #[tokio::test]
 async fn test_network_configuration() {
-    use production_pos::network::NetworkConfig;
+    use proof_of_stake::network::NetworkConfig;
 
     // Test default configuration
     let default_config = NetworkConfig::default();

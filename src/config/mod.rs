@@ -140,7 +140,7 @@ impl Default for MetricsConfig {
         MetricsConfig {
             enabled: false,
             listen_address: "127.0.0.1:9090".to_string(),
-            namespace: "production_pos".to_string(),
+            namespace: "proof_of_stake".to_string(),
         }
     }
 }

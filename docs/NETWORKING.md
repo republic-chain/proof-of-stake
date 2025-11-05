@@ -43,7 +43,7 @@ The networking module provides a fully-featured P2P networking solution built on
 ### Basic Setup
 
 ```rust
-use production_pos::network::{NetworkConfig, NetworkService};
+use proof_of_stake::network::{NetworkConfig, NetworkService};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

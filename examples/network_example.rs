@@ -1,4 +1,4 @@
-use production_pos::network::{NetworkConfig, NetworkService};
+use proof_of_stake::network::{NetworkConfig, NetworkService};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{info, Level};
@@ -64,13 +64,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Node 3 peers: {:?}", handle3.get_peers().await.unwrap_or_default());
 
     // Create and broadcast a test block from node 1
-    let test_block = production_pos::types::Block::new(
+    let test_block = proof_of_stake::types::Block::new(
         1,                    // height
         [0u8; 32],           // previous_hash
         [1u8; 32],           // state_root
         1,                   // slot
         0,                   // epoch
-        production_pos::types::Address([0u8; 32]), // proposer
+        proof_of_stake::types::Address([0u8; 32]), // proposer
         Vec::new(),          // transactions
         [0u8; 32],           // randao_reveal
         1000000,             // gas_limit
@@ -86,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         for i in 0..10 {
             if let Some(event) = handle2.next_event().await {
                 info!("Node 2 received event {}: {}", i, event.description());
-                if matches!(event, production_pos::network::NetworkEvent::BlockReceived { .. }) {
+                if matches!(event, proof_of_stake::network::NetworkEvent::BlockReceived { .. }) {
                     info!("Successfully received block broadcast!");
                     break;
                 }
@@ -98,7 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         for i in 0..10 {
             if let Some(event) = handle3.next_event().await {
                 info!("Node 3 received event {}: {}", i, event.description());
-                if matches!(event, production_pos::network::NetworkEvent::BlockReceived { .. }) {
+                if matches!(event, proof_of_stake::network::NetworkEvent::BlockReceived { .. }) {
                     info!("Successfully received block broadcast!");
                     break;
                 }

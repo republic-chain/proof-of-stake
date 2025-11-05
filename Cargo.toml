@@ -1,10 +1,10 @@
 [package]
-name = "production-pos"
+name = "proof-of-stake"
 version = "0.1.0"
 edition = "2021"
 authors = ["Republic Chain Team"]
 description = "Production-grade Proof of Stake blockchain implementation"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 readme = "README.md"
 
 [dependencies]
@@ -22,10 +22,31 @@ sha2 = "0.10"
 ed25519-dalek = { version = "2.0", features = ["rand_core"] }
 
 # Async runtime
-tokio = { version = "1.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time", "signal", "net"] }
+tokio = { version = "1.0", features = [
+    "macros",
+    "rt",
+    "rt-multi-thread",
+    "sync",
+    "time",
+    "signal",
+    "net",
+] }
 
 # Networking
-libp2p = { version = "0.54", features = ["tcp", "dns", "mdns", "noise", "yamux", "gossipsub", "identify", "kad", "ping", "macros", "tokio", "serde"] }
+libp2p = { version = "0.54", features = [
+    "tcp",
+    "dns",
+    "mdns",
+    "noise",
+    "yamux",
+    "gossipsub",
+    "identify",
+    "kad",
+    "ping",
+    "macros",
+    "tokio",
+    "serde",
+] }
 futures = "0.3"
 
 # CLI

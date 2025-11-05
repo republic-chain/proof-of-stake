@@ -1,5 +1,5 @@
 use clap::{Arg, Command};
-use production_pos::{config::NodeConfig, Node};
+use proof_of_stake::{config::NodeConfig, Node};
 use std::path::PathBuf;
 use tracing::{info, error};
 use tracing_subscriber;
@@ -70,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     let log_level = matches.get_one::<String>("log-level").unwrap();
     tracing_subscriber::fmt()
-        .with_env_filter(format!("production_pos={}", log_level))
+        .with_env_filter(format!("proof_of_stake={}", log_level))
         .init();
 
     info!("Starting Production PoS Node v0.1.0");
@@ -92,10 +92,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if let Some(network) = matches.get_one::<String>("network") {
         config.network.network_id = match network.as_str() {
-            "mainnet" => production_pos::NetworkId::Mainnet,
-            "testnet" => production_pos::NetworkId::Testnet,
-            "devnet" => production_pos::NetworkId::Devnet,
-            _ => production_pos::NetworkId::Devnet,
+            "mainnet" => proof_of_stake::NetworkId::Mainnet,
+            "testnet" => proof_of_stake::NetworkId::Testnet,
+            "devnet" => proof_of_stake::NetworkId::Devnet,
+            _ => proof_of_stake::NetworkId::Devnet,
         };
     }
 

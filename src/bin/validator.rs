@@ -1,5 +1,5 @@
 use clap::{Arg, Command};
-use production_pos::{crypto::KeyPair};
+use proof_of_stake::{crypto::KeyPair};
 use tracing::{info, error};
 
 #[tokio::main]

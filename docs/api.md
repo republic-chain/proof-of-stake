@@ -692,7 +692,7 @@ client.ws.subscribe('blocks', (block) => {
 ### Python
 
 ```python
-from production_pos import Client
+from proof_of_stake import Client
 
 client = Client('http://localhost:8080')
 
@@ -708,7 +708,7 @@ print(f'Balance: {balance.balance}')
 ### Rust
 
 ```rust
-use production_pos_client::Client;
+use proof_of_stake_client::Client;
 
 let client = Client::new("http://localhost:8080")?;
 
